@@ -1,0 +1,40 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  VERSION: qoire/local-mongo-replica-set:v4.4.20-version.1
+
+tasks:
+  clean:
+    cmds:
+      - docker rm -f $(docker ps -a -q --filter="ancestor={{.VERSION}}") 2>&- || echo "Found no containers for that image"
+      - docker rmi {{.VERSION }} || true
+  build:
+    desc: "Builds a new image with the associated tag (derived from VERSION var)"
+    cmds:
+      - docker build -t {{.VERSION}} .
+  replace:
+    desc: "Removes existing containers, image (same tag version), and builds new"
+    cmds:
+      - task: clean
+      - task: build
+  test_run:
+    desc: "Replaces existing with new build, and runs with test configs"
+    cmds:
+      - task: clean
+      - task: build
+      - "docker run -d -p 30303:30303 -p 30304:30304 -p 30305:30305 {{.VERSION}}"
+  test_run_alt_port:
+    desc: "test_run, but with alternative port specs"
+    cmds:
+      - task: clean
+      - task: build
+      - "docker run -d \
+          -e \"DB1_PORT=40303\"
+          -e \"DB2_PORT=40304\"
+          -e \"DB3_PORT=40305\" \
+          -p 40303:40303 \
+          -p 40304:40304 \
+          -p 40305:40305 \
+          {{.VERSION}}"
