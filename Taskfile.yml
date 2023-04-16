@@ -19,6 +19,10 @@ tasks:
     cmds:
       - task: clean
       - task: build
+  release:
+    deps: [replace]
+    cmds:
+      - docker push {{.VERSION}}
   test_run:
     desc: "Replaces existing with new build, and runs with test configs"
     cmds:
